@@ -36,7 +36,7 @@ func GetCpuInfo() models.CpuInfo {
 
 	var res models.CpuInfo = models.CpuInfo{
 		LoadPercentage: loadPercentage[0],
-		Temperature: temperature,
+		Temperature:    temperature,
 	}
 	return res
 }
@@ -49,8 +49,8 @@ func GetMeminfo() models.Meminfo {
 
 	var res models.Meminfo = models.Meminfo{
 		LoadPercentage: vm.UsedPercent,
-		Total: vm.Total,
-		Used: vm.Used,
+		Total:          vm.Total,
+		Used:           vm.Used,
 	}
 	return res
 }

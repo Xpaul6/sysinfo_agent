@@ -3,8 +3,9 @@ package main
 import (
 	"fmt"
 	"time"
-	"github.com/Xpaul6/sysinfo_agent/models"
+
 	"github.com/Xpaul6/sysinfo_agent/info"
+	"github.com/Xpaul6/sysinfo_agent/models"
 )
 
 var err error
