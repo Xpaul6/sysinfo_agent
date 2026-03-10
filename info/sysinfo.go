@@ -4,18 +4,16 @@ import (
 	"log"
 	"time"
 
-	"github.com/Xpaul6/sysinfo_agent/models"
+	. "github.com/Xpaul6/sysinfo_agent/models"
 
 	"github.com/shirou/gopsutil/v4/cpu"
 	"github.com/shirou/gopsutil/v4/mem"
 	"github.com/shirou/gopsutil/v4/sensors"
 )
 
-var err error
-
 const CHECK_INTERVAL = 500 * time.Millisecond
 
-func GetCpuInfo() models.CpuInfo {
+func GetCpuInfo() CpuInfo {
 	loadPercentage, err := cpu.Percent(CHECK_INTERVAL, false)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -34,20 +32,20 @@ func GetCpuInfo() models.CpuInfo {
 		}
 	}
 
-	var res models.CpuInfo = models.CpuInfo{
+	var res CpuInfo = CpuInfo{
 		LoadPercentage: loadPercentage[0],
 		Temperature:    temperature,
 	}
 	return res
 }
 
-func GetMeminfo() models.Meminfo {
+func GetMeminfo() Meminfo {
 	vm, err := mem.VirtualMemory()
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
-	var res models.Meminfo = models.Meminfo{
+	var res Meminfo = Meminfo{
 		LoadPercentage: vm.UsedPercent,
 		Total:          vm.Total,
 		Used:           vm.Used,
