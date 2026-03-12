@@ -39,13 +39,13 @@ func GetCpuInfo() CpuInfo {
 	return res
 }
 
-func GetMemInfo() Meminfo {
+func GetMemInfo() MemInfo {
 	vm, err := mem.VirtualMemory()
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
-	var res Meminfo = Meminfo{
+	var res MemInfo = MemInfo{
 		LoadPercentage: vm.UsedPercent,
 		Total:          vm.Total,
 		Used:           vm.Used,
