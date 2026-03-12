@@ -39,7 +39,7 @@ func GetCpuInfo() CpuInfo {
 	return res
 }
 
-func GetMeminfo() Meminfo {
+func GetMemInfo() Meminfo {
 	vm, err := mem.VirtualMemory()
 	if err != nil {
 		log.Fatal(err.Error())
