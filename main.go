@@ -1,8 +1,9 @@
 package main
 
 import (
-	"sync"
 	"net/http"
+	"sync"
+
 	"github.com/gin-gonic/gin"
 
 	"github.com/Xpaul6/sysinfo_agent/info"
@@ -19,30 +20,34 @@ func main() {
 func getSystemInfo(c *gin.Context) {
 	var wg = sync.WaitGroup{}
 
-	const gatherCallsNumber = 2
+	const gatherCallsNumber = 3
 	var cpuInfo CpuInfo
 	var memInfo MemInfo
+	var diskInfo []DiskInfo
 
 	wg.Add(gatherCallsNumber)
 
-	go func(){
+	go func() {
 		defer wg.Done()
 		cpuInfo = info.GetCpuInfo()
 	}()
 
-	go func(){
+	go func() {
 		defer wg.Done()
 		memInfo = info.GetMemInfo()
 	}()
 
+	go func() {
+		defer wg.Done()
+		diskInfo = info.GetDiskInfo()
+	}()
+
 	wg.Wait()
 
-	sysInfo := struct {
-		CPU CpuInfo `json:"cpu"`
-		Mem MemInfo `json:"mem"`
-	}{
+	var sysInfo = SysInfo{
 		CPU: cpuInfo,
 		Mem: memInfo,
+		Disk: diskInfo,
 	}
 
 	c.IndentedJSON(http.StatusOK, sysInfo)

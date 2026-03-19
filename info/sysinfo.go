@@ -6,6 +6,7 @@ import (
 
 	. "github.com/Xpaul6/sysinfo_agent/models"
 
+	"github.com/shirou/gopsutil/disk"
 	"github.com/shirou/gopsutil/v4/cpu"
 	"github.com/shirou/gopsutil/v4/mem"
 	"github.com/shirou/gopsutil/v4/sensors"
@@ -49,6 +50,27 @@ func GetMemInfo() MemInfo {
 		LoadPercentage: vm.UsedPercent,
 		Total:          vm.Total,
 		Used:           vm.Used,
+	}
+	return res
+}
+
+func GetDiskInfo() []DiskInfo {
+	partitions, err := disk.Partitions(true)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	var res []DiskInfo
+	for _, v := range partitions {
+		usage, err := disk.Usage(v.Mountpoint)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+		var curr DiskInfo = DiskInfo{
+			MountPoint: v.Mountpoint,
+			Total: usage.Total,
+			Used: usage.Used,
+		}
+		res = append(res, curr)
 	}
 	return res
 }
