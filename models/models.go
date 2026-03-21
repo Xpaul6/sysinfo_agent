@@ -4,9 +4,10 @@ package models
 type SysInfo struct {
 	CPU  CpuInfo    `json:"cpu"`
 	Mem  MemInfo    `json:"mem"`
-	Disk []DiskInfo `json:"disk"`
+	Disks []DiskInfo `json:"disk"`
 }
 
+// Specific hardware models
 type CpuInfo struct {
 	LoadPercentage float64 `json:"load"`
 	Temperature    float64 `json:"temperature"`

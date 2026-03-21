@@ -55,7 +55,7 @@ func GetMemInfo() MemInfo {
 }
 
 func GetDiskInfo() []DiskInfo {
-	partitions, err := disk.Partitions(true)
+	partitions, err := disk.Partitions(false)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -67,8 +67,8 @@ func GetDiskInfo() []DiskInfo {
 		}
 		var curr DiskInfo = DiskInfo{
 			MountPoint: v.Mountpoint,
-			Total: usage.Total,
-			Used: usage.Used,
+			Total:      usage.Total,
+			Used:       usage.Used,
 		}
 		res = append(res, curr)
 	}

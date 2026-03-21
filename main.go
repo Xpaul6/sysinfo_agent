@@ -27,6 +27,7 @@ func getSystemInfo(c *gin.Context) {
 
 	wg.Add(gatherCallsNumber)
 
+	// Goroutines function calls
 	go func() {
 		defer wg.Done()
 		cpuInfo = info.GetCpuInfo()
@@ -45,9 +46,9 @@ func getSystemInfo(c *gin.Context) {
 	wg.Wait()
 
 	var sysInfo = SysInfo{
-		CPU: cpuInfo,
-		Mem: memInfo,
-		Disk: diskInfo,
+		CPU:   cpuInfo,
+		Mem:   memInfo,
+		Disks: diskInfo,
 	}
 
 	c.IndentedJSON(http.StatusOK, sysInfo)
