@@ -60,6 +60,8 @@ func normalizeDeviceName(device string) string {
 		for i := len(device) - 1; i >= 0; i-- {
 			if device[i] < '0' || device[i] > '9' {
 				return device[:i+1]
+			} else {
+				return device
 			}
 		}
 	}
