@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 	"sync"
 
@@ -18,6 +19,7 @@ func main() {
 }
 
 func getSystemInfo(c *gin.Context) {
+	var err error
 	var wg = sync.WaitGroup{}
 
 	const gatherCallsNumber = 3
@@ -30,17 +32,26 @@ func getSystemInfo(c *gin.Context) {
 	// Goroutines function calls
 	go func() {
 		defer wg.Done()
-		cpuInfo = info.GetCpuInfo()
+		cpuInfo, err = info.GetCpuInfo()
+		if err != nil {
+			log.Println(err.Error())
+		}
 	}()
 
 	go func() {
 		defer wg.Done()
-		memInfo = info.GetMemInfo()
+		memInfo, err = info.GetMemInfo()
+		if err != nil {
+			log.Println(err.Error())
+		}
 	}()
 
 	go func() {
 		defer wg.Done()
-		diskInfo = info.GetDiskInfo()
+		diskInfo, err = info.GetDiskInfo()
+		if err != nil {
+			log.Println(err.Error())
+		}
 	}()
 
 	wg.Wait()

@@ -1,9 +1,8 @@
 package info
 
 import (
-	"log"
-	"time"
 	"strings"
+	"time"
 
 	. "github.com/Xpaul6/sysinfo_agent/models"
 
@@ -15,16 +14,16 @@ import (
 
 const CHECK_INTERVAL = 500 * time.Millisecond
 
-func GetCpuInfo() CpuInfo {
+func GetCpuInfo() (CpuInfo, error) {
 	loadPercentage, err := cpu.Percent(CHECK_INTERVAL, false)
 	if err != nil {
-		log.Fatal(err.Error())
+		return CpuInfo{}, nil
 	}
 
 	tempSensors, err := sensors.SensorsTemperatures()
 	var temperature float64
 	if err != nil {
-		log.Fatal(err.Error())
+		return CpuInfo{}, nil
 	}
 
 	for _, v := range tempSensors {
@@ -38,13 +37,13 @@ func GetCpuInfo() CpuInfo {
 		LoadPercentage: loadPercentage[0],
 		Temperature:    temperature,
 	}
-	return res
+	return res, nil
 }
 
-func GetMemInfo() MemInfo {
+func GetMemInfo() (MemInfo, error) {
 	vm, err := mem.VirtualMemory()
 	if err != nil {
-		log.Fatal(err.Error())
+		return MemInfo{}, err
 	}
 
 	var res MemInfo = MemInfo{
@@ -52,7 +51,7 @@ func GetMemInfo() MemInfo {
 		Total:          vm.Total,
 		Used:           vm.Used,
 	}
-	return res
+	return res, nil
 }
 
 // TODO: needs more optimal way for detectng physical drives, but works so far
@@ -68,10 +67,10 @@ func normalizeDeviceName(device string) string {
 	return ""
 }
 
-func GetDiskInfo() []DiskInfo {
+func GetDiskInfo() ([]DiskInfo, error) {
 	partitions, err := disk.Partitions(false)
 	if err != nil {
-		log.Fatal(err.Error())
+		return nil, err
 	}
 
 	var diskMap map[string]*DiskInfo = make(map[string]*DiskInfo)
@@ -79,7 +78,7 @@ func GetDiskInfo() []DiskInfo {
 	for _, v := range partitions {
 		usage, err := disk.Usage(v.Mountpoint)
 		if err != nil {
-			log.Fatal(err.Error())
+			return nil, err
 		}
 
 		diskName := normalizeDeviceName(v.Device)
@@ -100,5 +99,5 @@ func GetDiskInfo() []DiskInfo {
 	for _, v := range diskMap {
 		res = append(res, *v)
 	}
-	return res
+	return res, nil
 }
