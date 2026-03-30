@@ -56,7 +56,7 @@ func GetMemInfo() MemInfo {
 }
 
 func normalizeDeviceName(device string) string {
-	if strings.HasPrefix(device, "/dev/") {
+	if strings.HasPrefix(device, "/dev/s") {
 		for i := len(device) - 1; i >= 0; i-- {
 			if device[i] < '0' || device[i] > '9' {
 				return device[:i+1]
