@@ -15,10 +15,7 @@ func main() {
 	router := gin.Default()
 	router.GET("/sysinfo", getSystemInfo)
 
-	err := router.Run("localhost:8080")
-	if err != nil {
-		log.Fatal("Cannot start API server:", err)
-	}
+	router.Run("localhost:8080")
 }
 
 func getSystemInfo(c *gin.Context) {
@@ -70,9 +67,9 @@ func getSystemInfo(c *gin.Context) {
 
 	c.IndentedJSON(http.StatusOK, sysInfo)
 
+	close(errChan)
 	// Error logging
 	for v := range errChan {
 		log.Println(v)
 	}
-	close(errChan)
 }
