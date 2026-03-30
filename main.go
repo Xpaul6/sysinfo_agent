@@ -74,4 +74,5 @@ func getSystemInfo(c *gin.Context) {
 	for v := range errChan {
 		log.Println(v)
 	}
+	close(errChan)
 }
