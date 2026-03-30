@@ -55,6 +55,7 @@ func GetMemInfo() MemInfo {
 	return res
 }
 
+// TODO: needs more optimal way for detectng physical drives, but works so far
 func normalizeDeviceName(device string) string {
 	if strings.HasPrefix(device, "/dev/s") {
 		for i := len(device) - 1; i >= 0; i-- {
@@ -62,7 +63,6 @@ func normalizeDeviceName(device string) string {
 				return device[:i+1]
 			}
 		}
-		return device
 	}
 
 	return ""
