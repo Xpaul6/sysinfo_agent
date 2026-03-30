@@ -40,7 +40,7 @@ func getSystemInfo(c *gin.Context) {
 
 	go func() {
 		defer wg.Done()
-		diskInfo = info.GetPhysicalDisks()
+		diskInfo = info.GetDiskInfo()
 	}()
 
 	wg.Wait()

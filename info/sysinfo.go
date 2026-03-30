@@ -55,27 +55,6 @@ func GetMemInfo() MemInfo {
 	return res
 }
 
-func GetDiskInfo() []DiskInfo {
-	partitions, err := disk.Partitions(false)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	var res []DiskInfo
-	for _, v := range partitions {
-		usage, err := disk.Usage(v.Mountpoint)
-		if err != nil {
-			log.Fatal(err.Error())
-		}
-		var curr DiskInfo = DiskInfo{
-			MountPoint: v.Mountpoint,
-			Total:      usage.Total,
-			Used:       usage.Used,
-		}
-		res = append(res, curr)
-	}
-	return res
-}
-
 func normalizeDeviceName(device string) string {
 	if strings.HasPrefix(device, "/dev/") {
 		for i := len(device) - 1; i >= 0; i-- {
@@ -85,30 +64,27 @@ func normalizeDeviceName(device string) string {
 		}
 	}
 
-	if strings.HasPrefix(device, "disk") {
-		if idx := strings.Index(device, "s"); idx != -1 {
-			return device[:idx]
-		}
-	}
-
-	return device
+	return ""
 }
 
-func GetPhysicalDisks() []DiskInfo {
-	partitions, err := disk.Partitions(true)
+func GetDiskInfo() []DiskInfo {
+	partitions, err := disk.Partitions(false)
 	if err != nil {
-		return nil
+		log.Fatal(err.Error())
 	}
 
-	diskMap := make(map[string]*DiskInfo)
+	var diskMap map[string]*DiskInfo = make(map[string]*DiskInfo)
 
-	for _, p := range partitions {
-		usage, err := disk.Usage(p.Mountpoint)
+	for _, v := range partitions {
+		usage, err := disk.Usage(v.Mountpoint)
 		if err != nil {
-			continue
+			log.Fatal(err.Error())
 		}
 
-		diskName := normalizeDeviceName(p.Device)
+		diskName := normalizeDeviceName(v.Device)
+		if diskName == "" {
+			continue
+		}
 
 		if _, exists := diskMap[diskName]; !exists {
 			diskMap[diskName] = &DiskInfo{
@@ -119,11 +95,9 @@ func GetPhysicalDisks() []DiskInfo {
 		diskMap[diskName].Total += usage.Total
 		diskMap[diskName].Used += usage.Used
 	}
-
-	var result []DiskInfo
-	for _, d := range diskMap {
-		result = append(result, *d)
+	var res []DiskInfo
+	for _, v := range diskMap {
+		res = append(res, *v)
 	}
-
-	return result
+	return res
 }
