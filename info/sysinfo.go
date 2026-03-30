@@ -9,11 +9,13 @@ import (
 	"github.com/shirou/gopsutil/disk"
 	"github.com/shirou/gopsutil/v4/cpu"
 	"github.com/shirou/gopsutil/v4/mem"
+	"github.com/shirou/gopsutil/v4/net"
 	"github.com/shirou/gopsutil/v4/sensors"
 )
 
-const CHECK_INTERVAL = 500 * time.Millisecond
+const CHECK_INTERVAL = 3000 * time.Millisecond
 
+// CPU info
 func GetCpuInfo() (CpuInfo, error) {
 	loadPercentage, err := cpu.Percent(CHECK_INTERVAL, false)
 	if err != nil {
@@ -40,6 +42,7 @@ func GetCpuInfo() (CpuInfo, error) {
 	return res, nil
 }
 
+// RAM info
 func GetMemInfo() (MemInfo, error) {
 	vm, err := mem.VirtualMemory()
 	if err != nil {
@@ -54,8 +57,9 @@ func GetMemInfo() (MemInfo, error) {
 	return res, nil
 }
 
-// TODO: needs more optimal way for detectng physical drives, but works so far
-func normalizeDeviceName(device string) string {
+// Disks info
+func normalizeDiskDeviceName(device string) string {
+	// TODO: needs more optimal way for detectng physical drives, but works so far
 	if strings.HasPrefix(device, "/dev/s") {
 		for i := len(device) - 1; i >= 0; i-- {
 			if device[i] < '0' || device[i] > '9' {
@@ -81,7 +85,7 @@ func GetDiskInfo() ([]DiskInfo, error) {
 			return nil, err
 		}
 
-		diskName := normalizeDeviceName(v.Device)
+		diskName := normalizeDiskDeviceName(v.Device)
 		if diskName == "" {
 			continue
 		}
@@ -99,5 +103,56 @@ func GetDiskInfo() ([]DiskInfo, error) {
 	for _, v := range diskMap {
 		res = append(res, *v)
 	}
+	return res, nil
+}
+
+// Net devices info
+func isOkNetDeviceName(name string) bool {
+	var filter []string = []string{"lo", "docker", "veth", "br-", "bridge", "utun"}
+	for _, v := range filter {
+		if strings.HasPrefix(name, v) {
+			return false
+		}
+	}
+	return true
+}
+
+func GetNetInfo() ([]NetInfo, error) {
+	before, err := net.IOCounters(true)
+	if err != nil {
+		return nil, err
+	}
+
+	time.Sleep(CHECK_INTERVAL)
+
+	after, err := net.IOCounters(true)
+	if err != nil {
+		return nil, err
+	}
+
+	beforeMap := make(map[string]net.IOCountersStat)
+	for _, v := range before {
+		if !isOkNetDeviceName(v.Name) {
+			continue
+		}
+		beforeMap[v.Name] = v
+	}
+
+	var res []NetInfo
+	for _, a := range after {
+		b, ok := beforeMap[a.Name]
+		if !ok {
+			continue
+		}
+
+		var rBytes = a.BytesRecv - b.BytesRecv
+		var sBytes = a.BytesSent - b.BytesSent
+		res = append(res, NetInfo{
+			Name: a.Name,
+			RBpS: float64(rBytes) / CHECK_INTERVAL.Seconds(),
+			SBpS: float64(sBytes) / CHECK_INTERVAL.Seconds(),
+		})
+	}
+
 	return res, nil
 }
