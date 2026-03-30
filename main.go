@@ -3,19 +3,30 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 	"sync"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 
 	"github.com/Xpaul6/sysinfo_agent/info"
 	. "github.com/Xpaul6/sysinfo_agent/models"
 )
 
 func main() {
+	var port string = "8080"
+
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("Cannot load .env file")
+	} else {
+		port = os.Getenv("PORT")
+	}
+
 	router := gin.Default()
 	router.GET("/sysinfo", getSystemInfo)
 
-	router.Run("localhost:8080")
+	router.Run("localhost:" + string(port))
 }
 
 func getSystemInfo(c *gin.Context) {
