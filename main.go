@@ -15,11 +15,14 @@ func main() {
 	router := gin.Default()
 	router.GET("/sysinfo", getSystemInfo)
 
-	router.Run("localhost:8080")
+	err := router.Run("localhost:8080")
+	if err != nil {
+		log.Fatal("Cannot start API server:", err)
+	}
 }
 
 func getSystemInfo(c *gin.Context) {
-	var err error
+	errChan := make(chan error, 3)
 	var wg = sync.WaitGroup{}
 
 	const gatherCallsNumber = 3
@@ -32,25 +35,28 @@ func getSystemInfo(c *gin.Context) {
 	// Goroutines function calls
 	go func() {
 		defer wg.Done()
+		var err error
 		cpuInfo, err = info.GetCpuInfo()
 		if err != nil {
-			log.Println(err.Error())
+			errChan <- err
 		}
 	}()
 
 	go func() {
 		defer wg.Done()
+		var err error
 		memInfo, err = info.GetMemInfo()
 		if err != nil {
-			log.Println(err.Error())
+			errChan <- err
 		}
 	}()
 
 	go func() {
 		defer wg.Done()
+		var err error
 		diskInfo, err = info.GetDiskInfo()
 		if err != nil {
-			log.Println(err.Error())
+			errChan <- err
 		}
 	}()
 
@@ -63,4 +69,9 @@ func getSystemInfo(c *gin.Context) {
 	}
 
 	c.IndentedJSON(http.StatusOK, sysInfo)
+
+	// Error logging
+	for v := range errChan {
+		log.Println(v)
+	}
 }
