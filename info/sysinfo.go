@@ -3,6 +3,7 @@ package info
 import (
 	"log"
 	"time"
+	"strings"
 
 	. "github.com/Xpaul6/sysinfo_agent/models"
 
@@ -73,4 +74,56 @@ func GetDiskInfo() []DiskInfo {
 		res = append(res, curr)
 	}
 	return res
+}
+
+func normalizeDeviceName(device string) string {
+	if strings.HasPrefix(device, "/dev/") {
+		for i := len(device) - 1; i >= 0; i-- {
+			if device[i] < '0' || device[i] > '9' {
+				return device[:i+1]
+			}
+		}
+	}
+
+	if strings.HasPrefix(device, "disk") {
+		if idx := strings.Index(device, "s"); idx != -1 {
+			return device[:idx]
+		}
+	}
+
+	return device
+}
+
+func GetPhysicalDisks() []DiskInfo {
+	partitions, err := disk.Partitions(true)
+	if err != nil {
+		return nil
+	}
+
+	diskMap := make(map[string]*DiskInfo)
+
+	for _, p := range partitions {
+		usage, err := disk.Usage(p.Mountpoint)
+		if err != nil {
+			continue
+		}
+
+		diskName := normalizeDeviceName(p.Device)
+
+		if _, exists := diskMap[diskName]; !exists {
+			diskMap[diskName] = &DiskInfo{
+				MountPoint: diskName,
+			}
+		}
+
+		diskMap[diskName].Total += usage.Total
+		diskMap[diskName].Used += usage.Used
+	}
+
+	var result []DiskInfo
+	for _, d := range diskMap {
+		result = append(result, *d)
+	}
+
+	return result
 }
