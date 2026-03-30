@@ -5,7 +5,7 @@ type SysInfo struct {
 	CPU   CpuInfo    `json:"cpu"`
 	Mem   MemInfo    `json:"mem"`
 	Disks []DiskInfo `json:"disks"`
-	Net   []NetInfo    `json:"net"`
+	Net   []NetInfo  `json:"net"`
 }
 
 // Specific hardware models
@@ -27,7 +27,7 @@ type DiskInfo struct {
 }
 
 type NetInfo struct {
-	Name  string  `json:"name"`
-	RMbps float64 `json:"rmbps"`
-	SMbps float64 `json:"smbps"`
+	Name string  `json:"name"`
+	RBpS float64 `json:"rbps"` // Recieved bytes per second
+	SBpS float64 `json:"sbps"` // Sent bytes per second
 }

@@ -56,7 +56,7 @@ func GetMemInfo() (MemInfo, error) {
 }
 
 // TODO: needs more optimal way for detectng physical drives, but works so far
-func normalizeDeviceName(device string) string {
+func normalizeDiskDeviceName(device string) string {
 	if strings.HasPrefix(device, "/dev/s") {
 		for i := len(device) - 1; i >= 0; i-- {
 			if device[i] < '0' || device[i] > '9' {
@@ -82,7 +82,7 @@ func GetDiskInfo() ([]DiskInfo, error) {
 			return nil, err
 		}
 
-		diskName := normalizeDeviceName(v.Device)
+		diskName := normalizeDiskDeviceName(v.Device)
 		if diskName == "" {
 			continue
 		}
@@ -103,7 +103,7 @@ func GetDiskInfo() ([]DiskInfo, error) {
 	return res, nil
 }
 
-func verifDeviceName(name string) bool {
+func isOkNetDeviceName(name string) bool {
 	var filter []string = []string{"lo", "docker", "veth", "br-", "bridge", "utun"}
 	for _, v := range filter {
 		if strings.HasPrefix(name, v) {
@@ -128,7 +128,7 @@ func GetNetInfo() ([]NetInfo, error) {
 
 	beforeMap := make(map[string]net.IOCountersStat)
 	for _, v := range before {
-		if !verifDeviceName(v.Name) {
+		if !isOkNetDeviceName(v.Name) {
 			continue
 		}
 		beforeMap[v.Name] = v
@@ -145,8 +145,8 @@ func GetNetInfo() ([]NetInfo, error) {
 		var sBytes = a.BytesSent - b.BytesSent
 		res = append(res, NetInfo{
 			Name: a.Name,
-			RMbps: float64(rBytes) / 1024.0 / 1024.0 / CHECK_INTERVAL.Seconds(),
-			SMbps: float64(sBytes) / 1024.0 / 1024.0 / CHECK_INTERVAL.Seconds(),
+			RBpS: float64(rBytes) / CHECK_INTERVAL.Seconds(),
+			SBpS: float64(sBytes) / CHECK_INTERVAL.Seconds(),
 		})
 	}
 
