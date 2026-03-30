@@ -22,10 +22,11 @@ func getSystemInfo(c *gin.Context) {
 	errChan := make(chan error, 3)
 	var wg = sync.WaitGroup{}
 
-	const gatherCallsNumber = 3
+	const gatherCallsNumber = 4
 	var cpuInfo CpuInfo
 	var memInfo MemInfo
 	var diskInfo []DiskInfo
+	var netInfo []NetInfo
 
 	wg.Add(gatherCallsNumber)
 
@@ -57,12 +58,22 @@ func getSystemInfo(c *gin.Context) {
 		}
 	}()
 
+	go func() {
+		defer wg.Done()
+		var err error
+		netInfo, err = info.GetNetInfo()
+		if err != nil {
+			errChan <- err
+		}
+	}()
+
 	wg.Wait()
 
 	var sysInfo = SysInfo{
 		CPU:   cpuInfo,
 		Mem:   memInfo,
 		Disks: diskInfo,
+		Net: netInfo,
 	}
 
 	c.IndentedJSON(http.StatusOK, sysInfo)

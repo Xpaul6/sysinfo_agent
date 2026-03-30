@@ -9,10 +9,11 @@ import (
 	"github.com/shirou/gopsutil/disk"
 	"github.com/shirou/gopsutil/v4/cpu"
 	"github.com/shirou/gopsutil/v4/mem"
+	"github.com/shirou/gopsutil/v4/net"
 	"github.com/shirou/gopsutil/v4/sensors"
 )
 
-const CHECK_INTERVAL = 500 * time.Millisecond
+const CHECK_INTERVAL = 3000 * time.Millisecond
 
 func GetCpuInfo() (CpuInfo, error) {
 	loadPercentage, err := cpu.Percent(CHECK_INTERVAL, false)
@@ -99,5 +100,55 @@ func GetDiskInfo() ([]DiskInfo, error) {
 	for _, v := range diskMap {
 		res = append(res, *v)
 	}
+	return res, nil
+}
+
+func verifDeviceName(name string) bool {
+	var filter []string = []string{"lo", "docker", "veth", "br-", "bridge", "utun"}
+	for _, v := range filter {
+		if strings.HasPrefix(name, v) {
+			return false
+		}
+	}
+	return true
+}
+
+func GetNetInfo() ([]NetInfo, error) {
+	before, err := net.IOCounters(true)
+	if err != nil {
+		return nil, err
+	}
+
+	time.Sleep(CHECK_INTERVAL)
+
+	after, err := net.IOCounters(true)
+	if err != nil {
+		return nil, err
+	}
+
+	beforeMap := make(map[string]net.IOCountersStat)
+	for _, v := range before {
+		if !verifDeviceName(v.Name) {
+			continue
+		}
+		beforeMap[v.Name] = v
+	}
+
+	var res []NetInfo
+	for _, a := range after {
+		b, ok := beforeMap[a.Name]
+		if !ok {
+			continue
+		}
+
+		var rBytes = a.BytesRecv - b.BytesRecv
+		var sBytes = a.BytesSent - b.BytesSent
+		res = append(res, NetInfo{
+			Name: a.Name,
+			RMbps: float64(rBytes) / 1024.0 / 1024.0 / CHECK_INTERVAL.Seconds(),
+			SMbps: float64(sBytes) / 1024.0 / 1024.0 / CHECK_INTERVAL.Seconds(),
+		})
+	}
+
 	return res, nil
 }
