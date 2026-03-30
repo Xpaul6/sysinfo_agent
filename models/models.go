@@ -4,7 +4,7 @@ package models
 type SysInfo struct {
 	CPU  CpuInfo    `json:"cpu"`
 	Mem  MemInfo    `json:"mem"`
-	Disks []DiskInfo `json:"disk"`
+	Disks []DiskInfo `json:"disks"`
 }
 
 // Specific hardware models

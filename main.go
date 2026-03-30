@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 	"sync"
 
@@ -18,6 +19,7 @@ func main() {
 }
 
 func getSystemInfo(c *gin.Context) {
+	errChan := make(chan error, 3)
 	var wg = sync.WaitGroup{}
 
 	const gatherCallsNumber = 3
@@ -30,17 +32,29 @@ func getSystemInfo(c *gin.Context) {
 	// Goroutines function calls
 	go func() {
 		defer wg.Done()
-		cpuInfo = info.GetCpuInfo()
+		var err error
+		cpuInfo, err = info.GetCpuInfo()
+		if err != nil {
+			errChan <- err
+		}
 	}()
 
 	go func() {
 		defer wg.Done()
-		memInfo = info.GetMemInfo()
+		var err error
+		memInfo, err = info.GetMemInfo()
+		if err != nil {
+			errChan <- err
+		}
 	}()
 
 	go func() {
 		defer wg.Done()
-		diskInfo = info.GetDiskInfo()
+		var err error
+		diskInfo, err = info.GetDiskInfo()
+		if err != nil {
+			errChan <- err
+		}
 	}()
 
 	wg.Wait()
@@ -52,4 +66,10 @@ func getSystemInfo(c *gin.Context) {
 	}
 
 	c.IndentedJSON(http.StatusOK, sysInfo)
+
+	close(errChan)
+	// Error logging
+	for v := range errChan {
+		log.Println(v)
+	}
 }
