@@ -15,6 +15,7 @@ import (
 
 const CHECK_INTERVAL = 3000 * time.Millisecond
 
+// CPU info
 func GetCpuInfo() (CpuInfo, error) {
 	loadPercentage, err := cpu.Percent(CHECK_INTERVAL, false)
 	if err != nil {
@@ -41,6 +42,7 @@ func GetCpuInfo() (CpuInfo, error) {
 	return res, nil
 }
 
+// RAM info
 func GetMemInfo() (MemInfo, error) {
 	vm, err := mem.VirtualMemory()
 	if err != nil {
@@ -55,8 +57,9 @@ func GetMemInfo() (MemInfo, error) {
 	return res, nil
 }
 
-// TODO: needs more optimal way for detectng physical drives, but works so far
+// Disks info
 func normalizeDiskDeviceName(device string) string {
+	// TODO: needs more optimal way for detectng physical drives, but works so far
 	if strings.HasPrefix(device, "/dev/s") {
 		for i := len(device) - 1; i >= 0; i-- {
 			if device[i] < '0' || device[i] > '9' {
@@ -103,6 +106,7 @@ func GetDiskInfo() ([]DiskInfo, error) {
 	return res, nil
 }
 
+// Net devices info
 func isOkNetDeviceName(name string) bool {
 	var filter []string = []string{"lo", "docker", "veth", "br-", "bridge", "utun"}
 	for _, v := range filter {

@@ -19,15 +19,15 @@ func main() {
 }
 
 func getSystemInfo(c *gin.Context) {
-	errChan := make(chan error, 3)
+	const gatherCallsNumber = 4
 	var wg = sync.WaitGroup{}
 
-	const gatherCallsNumber = 4
 	var cpuInfo CpuInfo
 	var memInfo MemInfo
 	var diskInfo []DiskInfo
 	var netInfo []NetInfo
 
+	errChan := make(chan error, gatherCallsNumber)
 	wg.Add(gatherCallsNumber)
 
 	// Goroutines function calls
@@ -73,13 +73,13 @@ func getSystemInfo(c *gin.Context) {
 		CPU:   cpuInfo,
 		Mem:   memInfo,
 		Disks: diskInfo,
-		Net: netInfo,
+		Net:   netInfo,
 	}
 
 	c.IndentedJSON(http.StatusOK, sysInfo)
 
-	close(errChan)
 	// Error logging
+	close(errChan)
 	for v := range errChan {
 		log.Println(v)
 	}
