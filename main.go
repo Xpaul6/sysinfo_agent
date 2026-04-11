@@ -24,24 +24,32 @@ func main() {
 		port = os.Getenv("PORT")
 	}
 
+	m := sync.RWMutex{}
 	var currSysInfo = SysInfo{
 		CPU:   CpuInfo{},
 		Mem:   MemInfo{},
 		Disks: []DiskInfo{},
 		Net:   []NetInfo{},
 	}
+	currSysInfo = getSystemInfo()
 
 	// Info update loop
 	go func() {
 		for {
+			m.Lock()
 			currSysInfo = getSystemInfo()
+			m.Unlock()
 			time.Sleep(7 * time.Second)
 		}
 	}()
 
 	// Gin router setup
 	router := gin.Default()
-	router.GET("/sysinfo", func(c *gin.Context) { c.IndentedJSON(http.StatusOK, currSysInfo) })
+	router.GET("/sysinfo", func(c *gin.Context) {
+		m.RLock()
+		c.IndentedJSON(http.StatusOK, currSysInfo)
+		m.RUnlock()
+	})
 
 	router.Run("localhost:" + string(port))
 }
@@ -97,18 +105,17 @@ func getSystemInfo() SysInfo {
 
 	wg.Wait()
 
-	var sysInfo = SysInfo{
-		CPU:   cpuInfo,
-		Mem:   memInfo,
-		Disks: diskInfo,
-		Net:   netInfo,
-	}
-
 	// Error logging
 	close(errChan)
 	for v := range errChan {
 		log.Println(v)
 	}
 
+	var sysInfo = SysInfo{
+		CPU:   cpuInfo,
+		Mem:   memInfo,
+		Disks: diskInfo,
+		Net:   netInfo,
+	}
 	return sysInfo
 }
