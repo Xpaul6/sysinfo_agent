@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -23,13 +24,29 @@ func main() {
 		port = os.Getenv("PORT")
 	}
 
+	var currSysInfo = SysInfo{
+		CPU:   CpuInfo{},
+		Mem:   MemInfo{},
+		Disks: []DiskInfo{},
+		Net:   []NetInfo{},
+	}
+
+	// Info update loop
+	go func() {
+		for {
+			currSysInfo = getSystemInfo()
+			time.Sleep(7 * time.Second)
+		}
+	}()
+
+	// Gin router setup
 	router := gin.Default()
-	router.GET("/sysinfo", getSystemInfo)
+	router.GET("/sysinfo", func(c *gin.Context) { c.IndentedJSON(http.StatusOK, currSysInfo) })
 
 	router.Run("localhost:" + string(port))
 }
 
-func getSystemInfo(c *gin.Context) {
+func getSystemInfo() SysInfo {
 	const gatherCallsNumber = 4
 	var wg = sync.WaitGroup{}
 
@@ -87,11 +104,11 @@ func getSystemInfo(c *gin.Context) {
 		Net:   netInfo,
 	}
 
-	c.IndentedJSON(http.StatusOK, sysInfo)
-
 	// Error logging
 	close(errChan)
 	for v := range errChan {
 		log.Println(v)
 	}
+
+	return sysInfo
 }
