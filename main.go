@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -36,8 +37,9 @@ func main() {
 	// Info update loop
 	go func() {
 		for {
+			newSysData := getSystemInfo()
 			m.Lock()
-			currSysInfo = getSystemInfo()
+			currSysInfo = newSysData
 			m.Unlock()
 			time.Sleep(7 * time.Second)
 		}
@@ -51,7 +53,7 @@ func main() {
 		m.RUnlock()
 	})
 
-	router.Run("localhost:" + string(port))
+	router.Run(fmt.Sprintf(":%s", string(port)))
 }
 
 func getSystemInfo() SysInfo {
